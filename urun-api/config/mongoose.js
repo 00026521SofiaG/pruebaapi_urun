@@ -3,7 +3,7 @@ const debug = require("debug")("app:mongoose");
 
 const dbhost = process.env.DBHOST || "localhost";
 const dbport = process.env.DBPORT || "27017";
-const dbname = process.env.DBNAME || "UrunDB";
+const dbname = process.env.DBNAME || "URUN-DB";
 
 const dbUri = 'mongodb+srv://Sofia:E7WUFUG0fHbPmmjL@urundb.epzzada.mongodb.net/' || `mongodb://${dbhost}:${dbport}/${dbname}`;
 
