@@ -3,11 +3,15 @@ const user = require("../models/user.model");
 
 const controller = {};
 
-controller.create = async (req, res) =>{
-    const{nameUser,emailUser,passwordUser,pictureUser} = req.body;
+controller.getUser = (req, res) => {
+    const {user} = req;
+    if(!user){
+        return res.status(404).json({
+            error: 'User not found'
+        });
+    }
+    return res.status(200).json({...user._doc, validTokens: undefined});
 
-}
+};
 
-//Crear otro modelo pero solo para la informacion del usuario e intentar enviar la informacion desde dos 
-//modelos diferentes
-//quiza debo de cambiar el require de el modelo
+module.exports = controller;

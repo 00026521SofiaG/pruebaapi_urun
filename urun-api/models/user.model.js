@@ -20,6 +20,9 @@ const userSchema = new Schema({
     "pictureUser": {
         type:String
     },
+
+    "validTokens": [ String],
+    
     timestamps: {
         createdAt: "createdAt",
         updatedAt: "updatedAt",
@@ -60,5 +63,11 @@ const userSchema = new Schema({
     ]
 
 });
+
+userSchema.methods = {
+    comparePassword: function(password){
+        return Crypto.createHmac('sha256', password).digest('hex') === this.passwordUser;
+    }
+};
 
 module.exports = Mongoose.model("user", userSchema);
