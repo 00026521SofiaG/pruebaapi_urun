@@ -8,14 +8,12 @@ const userSchema = new Schema({
     nameUser: {
         type: String,
         require: true,
-        trim: true,
-        unique:true
+        trim: true   
     },
     emailUser: {
         type: String,
         require: true,
-        trim: true,
-        unique:true
+        trim: true
     },
     passwordUser: {
         type: String,
