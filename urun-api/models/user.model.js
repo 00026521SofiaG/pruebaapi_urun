@@ -23,19 +23,15 @@ const userSchema = new Schema({
 
     "validTokens": [ String],
     
-    timestamps: {
-        createdAt: "createdAt",
-        updatedAt: "updatedAt",
-    },
     "calculoCalorias": [
         {
             "altura": {
-                type : Int32,
+                type : String,
                 require: true,
                 trim: true
             },
             "peso" : {
-                type : Int32,
+                type : String,
                 require: true,
                 trim: true
 
@@ -45,17 +41,17 @@ const userSchema = new Schema({
     "objetivo" : [
         {
             "distancia" : {
-                type : Int32,
+                type : String,
                 require: true,
                 trim: true
             },
             "calorias": {
-                type : Int32,
+                type : String,
                 require: true,
                 trim: true
             },
             "veces" : {
-                type : Int32,
+                type : String,
                 require: true,
                 trim: true
             }

@@ -20,7 +20,9 @@ const verifyRegisterFields = ({nameUser, emailUser,passwordUser}) => {
 };
 
 //Veriying user registration
-const register = async({nameUser, emailUser, passwordUser}) => {
+
+
+/* const register = async({nameUser, emailUser, passwordUser}) => {
     let registerResponse = {
         success: true,
         content: {
@@ -50,7 +52,8 @@ const register = async({nameUser, emailUser, passwordUser}) => {
         throw new Error('Server Error');
     }
 
-};
+}; */
+
 
 //Verifying that the information isn't empty for login
 const verifyLoginFields = ({userEmail, passwordUser}) => {
@@ -104,7 +107,7 @@ const findByUsernameEmail = async(nameUser, emailUser) =>{
         }
         return serviceResponse;
     }catch(e) {
-        throw new Error('Server error.');
+        throw e;
     }
 
 };
@@ -126,7 +129,7 @@ const findById = async(user_id) => {
         }
         return serviceResponse;
     }catch(e) {
-        throw new Error('Server error.');
+        throw e;
     }
 };
 
