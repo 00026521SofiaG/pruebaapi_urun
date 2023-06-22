@@ -1,69 +1,72 @@
 const Mongoose = require("mongoose");
 const Schema = Mongoose.Schema;
+const debug = require("debug")("app:user-model");
+
+const crypto = require("crypto");
 
 const userSchema = new Schema({
-    "nameUser": {
+    nameUser: {
         type: String,
         require: true,
-        trim: true
+        trim: true,
+        unique:true
     },
-    "emailUser": {
+    emailUser: {
         type: String,
         require: true,
-        trim: true
+        trim: true,
+        unique:true
     },
-    "passwordUser": {
+    passwordUser: {
         type: String,
-        require: true,
-        trim: true
+        require: true
     },
-    "pictureUser": {
+    pictureUser: {
         type:String
     },
+    salt:{
+        type: String
+    },
 
-    "validTokens": [ String],
-    
-    "calculoCalorias": [
-        {
-            "altura": {
-                type : String,
-                require: true,
-                trim: true
-            },
-            "peso" : {
-                type : String,
-                require: true,
-                trim: true
+    validTokens:{
+        type : [ String],
+        default: []
 
-            }
-        }
-    ],
-    "objetivo" : [
-        {
-            "distancia" : {
-                type : String,
-                require: true,
-                trim: true
-            },
-            "calorias": {
-                type : String,
-                require: true,
-                trim: true
-            },
-            "veces" : {
-                type : String,
-                require: true,
-                trim: true
-            }
-        }
-    ]
+    }
 
 });
 
 userSchema.methods = {
-    comparePassword: function(password){
-        return Crypto.createHmac('sha256', password).digest('hex') === this.passwordUser;
-    }
-};
+   encryptPassword: function(password){
+    if(!password) return "";
 
-module.exports = Mongoose.model("user", userSchema);
+    try{
+        const encryptPassword = crypto.pbkdf2Sync(
+            password,
+            this.salt,
+            1000,64,
+            `sha512`
+        ).toString("hex");
+        return encryptPassword;
+    }catch (error){
+        debug({error});
+        return "";
+    }
+   },
+   makeSalt: function(){
+    return crypto.randomBytes(16).toString("hex");
+   },
+   comparePassword: function (password) {
+    return this.passwordUser === this.encryptPassword(password);
+   }
+}
+
+userSchema.virtual("password")
+.set(function(password = crypto.randomBytes(16).toString()){
+    if(!password) return;
+
+    this.salt = this.makeSalt();
+    this.passwordUser = this.encryptPassword(password);
+})
+
+module.exports = Mongoose.model("User", userSchema);

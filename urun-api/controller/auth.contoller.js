@@ -1,79 +1,74 @@
-const Validator = require("../validators/user.validator");
-const {createToken} = require("../helpers/jwtUtil");
-const { json } = require("express");
+const User = require("../models/user.model");
+const debug = require("debug")("app:auth-controller");
 
-//Register controller
-const register = async (req, res) => {
-    const fielValidator = Validator.verifyRegisterFields(req.body);
-    if(!fielValidator.success){
-        return res.status(400).json(fielValidator.content);
+const {createToken, verifyToken} = require("../helpers/jwtUtil");
 
+const controller = {};
+
+//Registering user
+controller.register = async (req, res) => {
+    try {
+        //Getting the user information
+         const {nameUser,emailUser,passwordUser} = req.body;
+
+         //Verifying that the username or email doesnt exists already
+          const user = await User.findOne({ $or: [{nameUser: nameUser}, {emailUser:emailUser}]});
+
+        if(user){
+            return res.status(409).json({error: "This user is already in use."});
+        }  
+ 
+        //debug({nameUser,emailUser,passwordUser});
+
+        const newUser = new User({
+            nameUser: nameUser,
+            emailUser: emailUser,
+            passwordUser: passwordUser
+        });
+
+        await newUser.save();
+
+        return res.status(201).json({message: "User created successfully"})
+    }catch (error){
+        debug({error});
+        return res.status(500).json({error: "Unexpected error"})
     }
+}
+
+controller.login = async (req, res) => {
     try{
-        const {username, userEmail} = req.body;
-
-        //Verifying if the user already exists
-        const userVerify = await Validator.findByUsernameEmail(username,userEmail);
-        if(userVerify.success){
-            return res.status(409).json({
-                error: 'User already exists'
-            });
+        const {identifier, passwordUser} = req.body;
+        
+        //Verifying if the user exists
+        const user = await User.findOne({$or: [{nameUser: identifier}, {emailUser: identifier}]});
+        if(!user){
+            return res.status(404).json({error: "This user does not exists"});
         }
-        //Registering user
-        const userRegister = await Validator.register(req.body);
-        if(!userRegister.success){
-            return res.status(409).json(userRegister.content);
+        if(!user.comparePassword(passwordUser)){
+            return res.status(401).json({error: "The password does not match"});
         }
-        return res.status(201).json(userRegister.content);
-    }catch(e){
-        return res.status(500).json({
-            error: 'Server error'
-        });
-    }
-     
-};
 
-//Login controller
-const login = async(req, res) => {
-    const fielValidator = Validator.verifyLoginFields(req.body);
-    if(!fielValidator.success){
-        return res.status(400).json(fielValidator.content);
+        //Loging in
+        const token = createToken(user._id);
+        user.tokens = [token, ...User.tokens.filter(_token => verifyToken(_token)).splice(0,4)];
+        await user.save();
+
+        //Registers the user tokens
+        return res.status(200).json({token: token});
+    }catch (error) {
+        debug(error);
+        return res.status(500).json({error: "Unexpected error"})
     }
+}
+
+controller.whoami = async (req,res) => {
     try{
-        const {identifier, password} = req.body;
-        //searching via username or email
-        const userVerify = await Validator.findByUsernameEmail(identifier, identifier);
-        if(!userVerify.success){
-            return res.status(404).json(userVerify.content);
-        }
-
-        const User = userVerify.content;
-
-        if(!User.comparePassword(password)){
-            return res.status(401).json({
-                error: 'Wrong password'
-            });
-        }
-
-        const token = createToken(User.user_id);
-
-        const tokenRegistered = await Validator.loginToken(User, token);
-        if(!tokenRegistered.success){
-            return res.status(409).json(tokenRegistered.content);
-        }
-
-        //Returning token
-        return res.status(200).json({
-            token: token
-        });
-
-
-    }catch(e){
-        return res.status(500).json({
-            e: 'Server Error'
-        });
+        const{_id, nameUser, emailUser} = req.user;
+        return res.status(200).json({_id, nameUser,emailUser});
+    }catch (error){
+        debug(error);
+        return res.status(500).json({ error: "Unexpected error"})
     }
+}
 
-};
-
-module.exports = {register, login};
+module.exports = controller;

@@ -1,30 +1,19 @@
 const jwt = require("jsonwebtoken");
 const secret = process.env.JWTSECRET || "secret";
+const expTime = process.env.TOKEN_EXP || "30d";
+const helper = {};
 
 // Generating a JWT token
-const generateToken = (user_id = "") => {
-  return new Promise((resolve, reject) => {
-    const payload = { user_id };
+helper.createToken = (_id) => {
+  return jwt.sign({userId: _id}, secret, {expiresIn: expTime});
+}
 
-// Signing  a JWT that is valid for 30 days.   
-    jwt.sign(
-      payload,
-      secret,
-      {
-        expiresIn: "30d",
-      },
-      (err, token) => {
-        if (err) {
-          console.log(err);
-          reject("Error at generating JWT");
-        } else {
-          resolve(token);
-        }
-      }
-    );
-  });
-};
+helper.verifyToken = (token) =>{
+  try{
+    return jwt.verify(token, secret);
+  }catch{
+    return false;
+  }
+}
 
-module.exports = {
-    generateToken,
-};
+module.exports = helper;
